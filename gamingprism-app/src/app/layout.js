@@ -2,8 +2,11 @@
 import { Provider } from 'react-redux';
 import  store  from './redux/store';
 import './globals.css';
+import { SessionProvider } from "next-auth/react"
+
 export default function RootLayout({ children }) {
   return (
+    <SessionProvider>
     <html lang="en">
       <body
       >
@@ -12,6 +15,6 @@ export default function RootLayout({ children }) {
           </Provider>
       </body>
     </html>
-    // </ReduxProvider>
+    </SessionProvider>
   );
 }
