@@ -1,42 +1,60 @@
 "use client";
-
-import Table from "@/components//Table";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { setItems, setFavorites } from "./redux/actions/dataActions";
 import { fetchPosts } from "@/utils/api";
+import Table from "@/components/Table";
+import { LogoutButton } from "@/components/LogoutButton";
 
 const Home = () => {
+  const router = useRouter();
   const dispatch = useDispatch();
-  const items = useSelector((state) => state.data.items); // Items from Redux
-  const favorites = useSelector((state) => state.data.favorites); // Favorites from Redux
+  const [mounted, setMounted] = useState(false);
+
+  const items = useSelector((state) => state.data.items);
+  const favorites = useSelector((state) => state.data.favorites);
 
   useEffect(() => {
-    // Fetch posts only if items are not in Redux
+    setMounted(true);
+
+    // Immediate authentication check
+    const checkAuth = () => {
+      if (typeof window !== 'undefined') {
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        if (users.length === 0) {
+          router.push('/signup');
+        }
+      }
+    };
+
     const loadData = async () => {
-      // Check if items are already loaded in Redux
       if (!items || items.length === 0) {
         try {
           const posts = await fetchPosts();
-          dispatch(setItems(posts)); // Store data in Redux
+          dispatch(setItems(posts));
         } catch (error) {
           console.error("Error loading posts:", error);
         }
       }
     };
 
+    checkAuth();
     loadData();
-  }, [dispatch, items]);
+  }, [dispatch, items, router]);
 
   const toggleFavorite = (itemId) => {
     const newFavorites = favorites.includes(itemId)
       ? favorites.filter((id) => id !== itemId)
       : [...favorites, itemId];
-    dispatch(setFavorites(newFavorites)); // Update favorites in Redux
+    dispatch(setFavorites(newFavorites));
   };
 
+  if (!mounted) return null;
+
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="container mx-auto px-4 py-6 relative">
+      <LogoutButton />
       <h1 className="text-3xl font-bold text-center mb-6">GamingPrism - Posts</h1>
       <Table data={items} toggleFavorite={toggleFavorite} favorites={favorites} />
     </div>
